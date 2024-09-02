@@ -2,39 +2,53 @@ import 'dart:convert';
 
 class Habit {
   String name;
-  DateTime startDate;
-  List<bool> progress;
+  int completionLevel;
+  List<String> completionLabels; 
 
-  Habit({required this.name, required this.startDate, required this.progress});
+  Habit({
+    required this.name,
+    this.completionLevel = 0,
+    required this.completionLabels,
+  });
 
-  void updateProgress(int index, bool value) {
-    progress[index] = value;
+  double getPercentage() {
+    switch (completionLevel) {
+      case 0:
+        return 1.0;
+      case 1:
+        return 0.75;
+      case 2:
+        return 0.5;
+      case 3:
+        return 0.25;
+      default:
+        return 0.0;
+    }
   }
 
-  int getCompletedDays() {
-    return progress.where((day) => day).length;
+  void resetForNextDay() {
+    completionLevel = 0;
   }
 
-  // Convert a Habit object to a Map object (encoding)
   Map<String, dynamic> toJson() => {
         'name': name,
-        'startDate': startDate.toIso8601String(),
-        'progress': progress.map((e) => e ? 1 : 0).toList(),
+        'completionLevel': completionLevel,
+        'completionLabels': completionLabels,
       };
 
-  // Convert a Map object to a Habit object (decoding)
+
   factory Habit.fromJson(Map<String, dynamic> json) => Habit(
         name: json['name'],
-        startDate: DateTime.parse(json['startDate']),
-        progress: List<bool>.from(json['progress'].map((e) => e == 1)),
+        completionLevel: json['completionLevel'],
+        completionLabels: List<String>.from(json['completionLabels']),
       );
 
-  // Helper method to encode a list of habits into a JSON string
+
   static String encode(List<Habit> habits) => json.encode(
         habits.map<Map<String, dynamic>>((habit) => habit.toJson()).toList(),
       );
 
-  // Helper method to decode a JSON string into a list of habits
+ 
   static List<Habit> decode(String habits) =>
       (json.decode(habits) as List<dynamic>)
           .map<Habit>((item) => Habit.fromJson(item))

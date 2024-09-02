@@ -4,48 +4,48 @@ import 'habit_provider.dart';
 import 'notification.dart';
 
 class HabitProgressScreen extends StatelessWidget {
-  final int habitIndex; // Now taking index instead of habit
+  final int habitIndex; 
   final NotificationService notificationService;
 
-  HabitProgressScreen({
+  const HabitProgressScreen({super.key, 
     required this.habitIndex,
     required this.notificationService,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Get the habit from the provider using the index
     final habit = Provider.of<HabitProvider>(context, listen: false).habits[habitIndex];
 
     return Scaffold(
       appBar: AppBar(
         title: Text(habit.name),
       ),
-      body: ListView.builder(
-        itemCount: habit.progress.length,
-        itemBuilder: (context, index) {
-          return CheckboxListTile(
-            title: Text('Day ${index + 1}'),
-            value: habit.progress[index],
-            onChanged: (bool? value) {
-              if (value != null) {
-                Provider.of<HabitProvider>(context, listen: false)
-                    .updateHabitProgress(habitIndex, index, value);
+      body: Center(
+        child: Column(
+          children: List.generate(5, (level) {
+            return RadioListTile(
+              title: Text(habit.completionLabels[level]),
+              value: level,
+              groupValue: habit.completionLevel,
+              onChanged: (int? value) {
+                if (value != null) {
+                  Provider.of<HabitProvider>(context, listen: false)
+                      .updateCompletionLevel(habitIndex, value);
 
-                // Schedule a notification when a habit is marked as completed
-                if (value) {
-                  final now = TimeOfDay.now();
-                  notificationService.scheduleDailyNotification(
-                    habit.hashCode,
-                    'Good job!',
-                    'You have completed your habit today!',
-                    now,
-                  );
+                  if (value < 4) {
+                    final now = TimeOfDay.now();
+                    notificationService.scheduleDailyNotification(
+                      habit.hashCode,
+                      'Reminder!',
+                      'Don\'t forget to complete your habit today!',
+                      now,
+                    );
+                  }
                 }
-              }
-            },
-          );
-        },
+              },
+            );
+          }),
+        ),
       ),
     );
   }

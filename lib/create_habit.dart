@@ -6,14 +6,35 @@ import 'habit.dart';
 class AddHabitScreen extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
+  final List<TextEditingController> _completionLabelControllers = List.generate(
+    5,
+    (index) => TextEditingController(),
+  );
+
+  AddHabitScreen({super.key});
+
+  int getLevel(int level){
+    switch(level) {
+      case 0:
+        return 5;
+      case 1:
+        return 4;
+      case 2:
+        return 3;
+      case 3:
+        return 2;
+      default:
+        return 1;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add New Habit'),
+        title: const Text('Add New Habit'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -21,7 +42,7 @@ class AddHabitScreen extends StatelessWidget {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Habit Name'),
+                decoration: const InputDecoration(labelText: 'Habit Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a habit name';
@@ -29,21 +50,37 @@ class AddHabitScreen extends StatelessWidget {
                   return null;
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
+              ...List.generate(5, (index) {
+                return TextFormField(
+                  controller: _completionLabelControllers[index],
+                  decoration: InputDecoration(
+                    labelText: 'Completion level ${getLevel(index)}',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter completion level ${getLevel(index)}';
+                    }
+                    return null;
+                  },
+                );
+              }),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     Provider.of<HabitProvider>(context, listen: false).addHabit(
                       Habit(
                         name: _nameController.text,
-                        startDate: DateTime.now(),
-                        progress: List<bool>.filled(7, false), // for a week
+                        completionLabels: _completionLabelControllers
+                            .map((controller) => controller.text)
+                            .toList(),
                       ),
                     );
                     Navigator.pop(context);
                   }
                 },
-                child: Text('Add Habit'),
+                child: const Text('Add Habit'),
               ),
             ],
           ),

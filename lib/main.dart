@@ -5,10 +5,8 @@ import 'notification.dart';
 import 'habit_list.dart';
 
 void main() {
-  // Ensure that Flutter's binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize the notification service
   final NotificationService notificationService = NotificationService();
   notificationService.init();
 
@@ -18,7 +16,7 @@ void main() {
 class MyApp extends StatelessWidget {
   final NotificationService notificationService;
 
-  MyApp({required this.notificationService});
+  const MyApp({super.key, required this.notificationService});
 
   @override
   Widget build(BuildContext context) {
