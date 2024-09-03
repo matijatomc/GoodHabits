@@ -4,11 +4,13 @@ class Habit {
   String name;
   int completionLevel;
   List<String> completionLabels; 
+  Map<String, double> completionData;
 
   Habit({
     required this.name,
     this.completionLevel = 0,
     required this.completionLabels,
+    required this.completionData,
   });
 
   double getPercentage() {
@@ -34,21 +36,22 @@ class Habit {
         'name': name,
         'completionLevel': completionLevel,
         'completionLabels': completionLabels,
+        'completionData': completionData,
       };
-
 
   factory Habit.fromJson(Map<String, dynamic> json) => Habit(
         name: json['name'],
         completionLevel: json['completionLevel'],
         completionLabels: List<String>.from(json['completionLabels']),
+        completionData: json['completionData'] != null
+            ? Map<String, double>.from(json['completionData'])
+            : {},
       );
-
 
   static String encode(List<Habit> habits) => json.encode(
         habits.map<Map<String, dynamic>>((habit) => habit.toJson()).toList(),
       );
 
- 
   static List<Habit> decode(String habits) =>
       (json.decode(habits) as List<dynamic>)
           .map<Habit>((item) => Habit.fromJson(item))

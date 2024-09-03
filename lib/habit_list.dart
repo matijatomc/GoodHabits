@@ -2,23 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'habit_provider.dart';
 import 'create_habit.dart';
-import 'notification.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 class HabitListScreen extends StatelessWidget {
-  final NotificationService notificationService;
-
-  const HabitListScreen({super.key, required this.notificationService});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Habits'),
+        title: Text('Your Habits'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: Icon(Icons.add),
             onPressed: () {
               Navigator.push(
                 context,
@@ -28,22 +22,54 @@ class HabitListScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView( 
-        child: Consumer<HabitProvider>(
-          builder: (context, habitProvider, child) {
-            return Column(
+      body: Consumer<HabitProvider>(
+        builder: (context, habitProvider, child) {
+          return SingleChildScrollView(  // Enable scrolling
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
               children: [
                 ListView.builder(
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: NeverScrollableScrollPhysics(), // Prevent ListView from scrolling independently
                   itemCount: habitProvider.habits.length,
                   itemBuilder: (context, index) {
                     final habit = habitProvider.habits[index];
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(habit.name),
-                        Column(
+                    return Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListTile(
+                        title: Text(
+                          habit.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddHabitScreen(habit: habit, index: index),
+                                  ),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                habitProvider.removeHabit(index);
+                              },
+                            ),
+                          ],
+                        ),
+                        subtitle: Column(
                           children: List.generate(5, (level) {
                             return RadioListTile(
                               title: Text(habit.completionLabels[level]),
@@ -57,29 +83,36 @@ class HabitListScreen extends StatelessWidget {
                             );
                           }),
                         ),
-                      ],
+                      ),
                     );
                   },
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
                     habitProvider.calculateDailyAverage();
                   },
-                  child: const Text('Submit'),
+                  child: Text('Submit'),
                 ),
-                const SizedBox(height: 20),
-                const Text('Progress in the Last 7 Days'),
+                SizedBox(height: 20),
+                Text(
+                  'Progress in the Last 7 Days',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 SizedBox(
                   height: 200,
                   child: LineChart(
                     LineChartData(
                       lineBarsData: [
                         LineChartBarData(
-                          spots: _getLast7DaysProgress(habitProvider.last7DaysData),
+                          spots: _getLast7DaysProgress(
+                            habitProvider.last30DaysData.length >= 7
+                                ? habitProvider.last30DaysData.sublist(habitProvider.last30DaysData.length - 7)
+                                : habitProvider.last30DaysData,
+                          ),
                           isCurved: true,
                           barWidth: 4,
-                          color: Colors.blue,
+                          color: Colors.teal,
                           belowBarData: BarAreaData(show: false),
                         ),
                       ],
@@ -110,10 +143,10 @@ class HabitListScreen extends StatelessWidget {
                             },
                           ),
                         ),
-                        rightTitles: const AxisTitles(
+                        rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
                         ),
-                        topTitles: const AxisTitles(
+                        topTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
@@ -122,22 +155,16 @@ class HabitListScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                const Text('Progress in the Last 30 Days'),
-                TableCalendar(
-                  firstDay: DateTime.utc(2022, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
-                  focusedDay: DateTime.now(),
-                  calendarBuilders: CalendarBuilders(
-                    markerBuilder: (context, day, events) {
-                      return _buildCalendarMarker(day, habitProvider.completionMap);
-                    },
-                  ),
+                SizedBox(height: 20),
+                Text(
+                  'Last 30 Days',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
+                _buildCalendarGrid(habitProvider.last30DaysData),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -148,26 +175,29 @@ class HabitListScreen extends StatelessWidget {
     });
   }
 
-  Widget? _buildCalendarMarker(DateTime day, Map<DateTime, double> completionMap) {
-    if (completionMap.containsKey(day)) {
-      double completionRate = completionMap[day]!;
-      Color color;
-      if (completionRate >= 0.75) {
-        color = Colors.green;
-      } else if (completionRate >= 0.5) {
-        color = Colors.yellow;
-      } else if (completionRate >= 0.25) {
-        color = Colors.orange;
-      } else {
-        color = Colors.red;
+  Widget _buildCalendarGrid(List<double> last30DaysData) {
+    List<Widget> calendarSquares = [];
+
+    for (double completionRate in last30DaysData) {
+      Color squareColor;
+      if (completionRate == 0){
+        squareColor = const Color.fromARGB(255, 221, 219, 219);
       }
-      return Container(
-        margin: const EdgeInsets.all(2),
+      else{
+        squareColor = Colors.teal.withOpacity(completionRate);
+      }
+      calendarSquares.add(Container(
+        margin: EdgeInsets.all(2),
         width: 16,
         height: 16,
-        color: color,
-      );
+        color: squareColor,
+      ));
     }
-    return null;
+
+    return GridView.count(
+      crossAxisCount: 7,
+      shrinkWrap: true,
+      children: calendarSquares,
+    );
   }
 }

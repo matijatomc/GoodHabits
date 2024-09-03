@@ -1,33 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'habit_provider.dart';
-import 'notification.dart';
 import 'habit_list.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  final NotificationService notificationService = NotificationService();
-  notificationService.init();
-
-  runApp(MyApp(notificationService: notificationService));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final NotificationService notificationService;
-
-  const MyApp({super.key, required this.notificationService});
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => HabitProvider(),
+      create: (_) => HabitProvider(),
       child: MaterialApp(
-        title: 'Good Habit Tracker',
+        title: 'Habit Tracker',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.teal,
+          hintColor: Colors.tealAccent,
+          fontFamily: 'Roboto',
+          textTheme: TextTheme(
+            titleLarge: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+            bodyMedium: TextStyle(color: Colors.black87),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
         ),
-        home: HabitListScreen(notificationService: notificationService),
+        home: HabitListScreen(),
       ),
     );
   }

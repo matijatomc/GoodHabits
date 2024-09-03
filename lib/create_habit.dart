@@ -4,14 +4,15 @@ import 'habit_provider.dart';
 import 'habit.dart';
 
 class AddHabitScreen extends StatelessWidget {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final List<TextEditingController> _completionLabelControllers = List.generate(
-    5,
-    (index) => TextEditingController(),
-  );
+  final Habit? habit;
+  final int? index;
 
-  AddHabitScreen({super.key});
+  AddHabitScreen({this.habit, this.index});
+
+  final TextEditingController _nameController = TextEditingController();
+  final List<TextEditingController> _completionControllers =
+      List.generate(5, (index) => TextEditingController());
+
 
   int getLevel(int level){
     switch(level) {
@@ -30,60 +31,64 @@ class AddHabitScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (habit != null) {
+      _nameController.text = habit!.name;
+      for (int i = 0; i < 5; i++) {
+        _completionControllers[i].text = habit!.completionLabels[i];
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Habit'),
+        title: Text(habit == null ? 'Add New Habit' : 'Edit Habit'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Habit Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a habit name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              ...List.generate(5, (index) {
-                return TextFormField(
-                  controller: _completionLabelControllers[index],
-                  decoration: InputDecoration(
-                    labelText: 'Completion level ${getLevel(index)}',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter completion level ${getLevel(index)}';
-                    }
-                    return null;
-                  },
+        child: Column(
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Habit Name'),
+              style: TextStyle(color: Colors.teal),
+            ),
+            SizedBox(height: 10),
+            ...List.generate(5, (index) {
+              return TextField(
+                controller: _completionControllers[index],
+                decoration: InputDecoration(
+                  labelText: 'Completion Level ${getLevel(index)}',
+                ),
+                style: TextStyle(color: Colors.teal),
+              );
+            }),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                String name = _nameController.text;
+                List<String> completionLabels = _completionControllers
+                    .map((controller) => controller.text)
+                    .toList();
+
+                Habit newHabit = Habit(
+                  name: name,
+                  completionLabels: completionLabels,
+                  completionLevel: habit?.completionLevel ?? 0,
+                  completionData: habit?.completionData ?? {},
                 );
-              }),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    Provider.of<HabitProvider>(context, listen: false).addHabit(
-                      Habit(
-                        name: _nameController.text,
-                        completionLabels: _completionLabelControllers
-                            .map((controller) => controller.text)
-                            .toList(),
-                      ),
-                    );
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('Add Habit'),
-              ),
-            ],
-          ),
+
+                if (habit == null) {
+                  Provider.of<HabitProvider>(context, listen: false)
+                      .addHabit(newHabit);
+                } else {
+                  Provider.of<HabitProvider>(context, listen: false)
+                      .updateHabit(index!, newHabit);
+                }
+
+                Navigator.pop(context);
+              },
+              child: Text(habit == null ? 'Add Habit' : 'Update Habit'),
+            ),
+          ],
         ),
       ),
     );
