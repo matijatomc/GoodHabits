@@ -5,7 +5,7 @@ import 'dart:async';
 
 class HabitProvider with ChangeNotifier {
   List<Habit> _habits = [];
-  List<double> _last30DaysData = [];
+  final List<double> _last28DaysData = [];
   Map<DateTime, double> completionMap = {};
   Timer? _dailyResetTimer;
 
@@ -16,7 +16,7 @@ class HabitProvider with ChangeNotifier {
 
   List<Habit> get habits => _habits;
 
-  List<double> get last30DaysData => _last30DaysData;
+  List<double> get last28DaysData => _last28DaysData;
 
   void addHabit(Habit habit) {
     _habits.add(habit);
@@ -57,15 +57,15 @@ class HabitProvider with ChangeNotifier {
     double averageCompletion = totalCompletion / _habits.length;
     completionMap[today] = averageCompletion;
 
-    _updateLast30DaysData(today);
+    _updateLast28DaysData(today);
     notifyListeners();
   }
 
-  void _updateLast30DaysData(DateTime today) {
-    _last30DaysData.clear();
+  void _updateLast28DaysData(DateTime today) {
+    _last28DaysData.clear();
 
-    for (int i = 0; i < 30; i++) {
-      DateTime day = today.subtract(Duration(days: 29 - i));
+    for (int i = 0; i < 28; i++) {
+      DateTime day = today.subtract(Duration(days: 27 - i));
       String dayString = day.toIso8601String().split('T').first;
 
       double completionRate = 0.0;
@@ -73,7 +73,7 @@ class HabitProvider with ChangeNotifier {
         completionRate += habit.completionData[dayString] ?? 0.0;
       }
       completionRate /= _habits.isNotEmpty ? _habits.length : 1;
-      _last30DaysData.add(completionRate);
+      _last28DaysData.add(completionRate);
     }
   }
 
@@ -106,6 +106,7 @@ class HabitProvider with ChangeNotifier {
     String? habitsString = prefs.getString('habits');
     if (habitsString != null) {
       _habits = Habit.decode(habitsString);
+      calculateDailyAverage();
       notifyListeners();
     }
   }

@@ -4,10 +4,12 @@ import 'habit_provider.dart';
 import 'habit_list.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -18,8 +20,8 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.teal,
           hintColor: Colors.tealAccent,
           fontFamily: 'Roboto',
-          textTheme: TextTheme(
-            titleLarge: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+          textTheme: const TextTheme(
+            titleLarge: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             bodyMedium: TextStyle(color: Colors.black87),
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
@@ -32,8 +34,9 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: HabitListScreen(),
+        home: const HabitListScreen(),
       ),
     );
   }
+  
 }

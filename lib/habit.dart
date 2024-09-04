@@ -33,24 +33,24 @@ class Habit {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'completionLevel': completionLevel,
-        'completionLabels': completionLabels,
-        'completionData': completionData,
-      };
+    'name': name,
+    'completionLevel': completionLevel,
+    'completionLabels': completionLabels,
+    'completionData': completionData,
+  };
 
   factory Habit.fromJson(Map<String, dynamic> json) => Habit(
-        name: json['name'],
-        completionLevel: json['completionLevel'],
-        completionLabels: List<String>.from(json['completionLabels']),
-        completionData: json['completionData'] != null
-            ? Map<String, double>.from(json['completionData'])
-            : {},
-      );
+    name: json['name'],
+    completionLevel: json['completionLevel'],
+    completionLabels: List<String>.from(json['completionLabels']),
+    completionData: json['completionData'] != null
+        ? Map<String, double>.from(json['completionData'])
+        : {},
+  );
 
   static String encode(List<Habit> habits) => json.encode(
-        habits.map<Map<String, dynamic>>((habit) => habit.toJson()).toList(),
-      );
+    habits.map<Map<String, dynamic>>((habit) => habit.toJson()).toList(),
+  );
 
   static List<Habit> decode(String habits) =>
       (json.decode(habits) as List<dynamic>)

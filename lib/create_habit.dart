@@ -7,12 +7,11 @@ class AddHabitScreen extends StatelessWidget {
   final Habit? habit;
   final int? index;
 
-  AddHabitScreen({this.habit, this.index});
+  AddHabitScreen({super.key, this.habit, this.index});
 
   final TextEditingController _nameController = TextEditingController();
   final List<TextEditingController> _completionControllers =
       List.generate(5, (index) => TextEditingController());
-
 
   int getLevel(int level){
     switch(level) {
@@ -48,49 +47,87 @@ class AddHabitScreen extends StatelessWidget {
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Habit Name'),
-              style: TextStyle(color: Colors.teal),
+              decoration: const InputDecoration(labelText: 'Habit Name'),
+              style: const TextStyle(color: Colors.teal),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             ...List.generate(5, (index) {
               return TextField(
                 controller: _completionControllers[index],
                 decoration: InputDecoration(
                   labelText: 'Completion Level ${getLevel(index)}',
                 ),
-                style: TextStyle(color: Colors.teal),
+                style: const TextStyle(color: Colors.teal),
               );
             }),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                String name = _nameController.text;
-                List<String> completionLabels = _completionControllers
-                    .map((controller) => controller.text)
-                    .toList();
+                if (_validateInputs(context)) {
+                  String name = _nameController.text;
+                  List<String> completionLabels = _completionControllers
+                      .map((controller) => controller.text)
+                      .toList();
 
-                Habit newHabit = Habit(
-                  name: name,
-                  completionLabels: completionLabels,
-                  completionLevel: habit?.completionLevel ?? 0,
-                  completionData: habit?.completionData ?? {},
-                );
+                  Habit newHabit = Habit(
+                    name: name,
+                    completionLabels: completionLabels,
+                    completionLevel: habit?.completionLevel ?? 0,
+                    completionData: habit?.completionData ?? {},
+                  );
 
-                if (habit == null) {
-                  Provider.of<HabitProvider>(context, listen: false)
-                      .addHabit(newHabit);
-                } else {
-                  Provider.of<HabitProvider>(context, listen: false)
-                      .updateHabit(index!, newHabit);
+                  if (habit == null) {
+                    Provider.of<HabitProvider>(context, listen: false)
+                        .addHabit(newHabit);
+                  } else {
+                    Provider.of<HabitProvider>(context, listen: false)
+                        .updateHabit(index!, newHabit);
+                  }
+
+                  Navigator.pop(context);
                 }
-
-                Navigator.pop(context);
               },
               child: Text(habit == null ? 'Add Habit' : 'Update Habit'),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  bool _validateInputs(BuildContext context) {
+    if (_nameController.text.isEmpty) {
+      _showErrorMessage(context, 'Please enter a habit name.');
+      return false;
+    }
+
+    for (int i = 0; i < _completionControllers.length; i++) {
+      if (_completionControllers[i].text.isEmpty) {
+        _showErrorMessage(context, 'Please fill in all completion labels.');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void _showErrorMessage(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
