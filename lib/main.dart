@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => HabitProvider(),
       child: MaterialApp(
-        title: 'Habit Tracker',
+        title: 'GoodHabit',
         theme: ThemeData(
           primarySwatch: Colors.teal,
           hintColor: Colors.tealAccent,
